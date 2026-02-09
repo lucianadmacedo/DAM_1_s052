@@ -1,0 +1,199 @@
+---
+title: |
+  <center> S-052: Intermediate and Advanced Statistical Methods </center>
+  <center> for Applied Educational Research </center>
+  <center> Spring 2026 </center>
+  <center> Week 3 Data Analytic Memo Starter Code </center>
+author: "Sara Ji and Bailey Buchanan"
+date: "Last Modified: Feb 2026"
+output: pdf_document
+---
+
+### RQ: What is the causal effect of technology-led afterschool on math scores?
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load in packages
+```{r packages, warning = FALSE, message = FALSE}
+# These packages will be helpful for your analysis
+library(foreign)    # For reading various data formats
+library(haven)      # For reading Stata files
+library(tidyverse)  # For data manipulation and visualization
+library(stargazer)  # For nice regression tables
+
+# If you haven't installed these packages yet, run:
+# install.packages(c("foreign", "haven", "tidyverse", "stargazer"))
+```
+
+## Define the working directory and load data
+```{r setwd}
+# Set your working directory to where your data file is located
+# Update the path below to match your file location
+#setwd("YOUR_DIRECTORY_PATH_HERE")
+```
+
+##Data: Thanks to Prof. Alejandro Ganimian and coauthors Karthik Muralidharan and Abhijeet Singh for this data
+```{r importdata2}
+# Load the data
+dat <- read_dta("mindspark_data.dta")
+head(dat)
+```
+
+## Q1: Exploratory Data Analysis
+```{r explore}
+# For this question, you will need:
+# - The hist() function or ggplot() with geom_histogram() for histograms
+# - The summarize() function from dplyr or the summary() function for descriptive statistics
+# - You can calculate statistics by group using group_by() and summarize() in dplyr
+# - Or use aggregate() or tapply() in base R
+# 
+# Hint: To get means by groups, you might use something like:
+# dat %>%
+   # group_by(variable1, variable2) %>%
+   # summarize(mean_score = mean(math_std, na.rm = TRUE))
+
+# Before turning to Google, AI, etc., try typing `?function_name` in the console to see documentation
+# - Example: `?lm` for help with linear models
+
+dat$treat <- factor(dat$treat,
+                      levels = c(0 , 1),
+                      labels = c("control", "treatment"))
+
+dat$female <- factor(dat$female,
+                      levels = c(0 , 1),
+                      labels = c("male", "female"))
+
+# question one: a) What percentage of students in the sample were female?
+percent_female <- mean(dat$female == "female") * 100
+# 75.92892 %
+percent_male <- mean(dat$female == "male") * 100
+
+total_gap <- percent_female - percent_male
+
+# participation gap is 75.92892 - 24.07108 = 51.85784 percentage points
+
+# questions
+# b) What was the gender gap in endline scores among students who were not offered treatment?
+# c) What was the gender gap in endline scores among students who were offered treatment?
+
+gender_by_treat <- dat |>
+  group_by(treat) |>
+  summarise(
+    pct_female = mean(female == "female") * 100 ,
+    pct_male = mean(female == "male") * 100,
+    gap = pct_female - pct_male
+  ) 
+
+?group_by
+
+
+# question
+# d) Plot the distribution of endline scores for each of the four groups we consider in this
+# analysis (female students offered treatment, female students not offered treatment,
+# male students offered treatment, male students not offered treatment). Based on these
+# four distributions, what do you hypothesize about (1) the treatment effect for male
+# students, (2) the treatment effect for female students, and (3) whether there is a
+# difference between the effects? Explain in 3-5 sentences, making reference to your
+# histograms.
+
+
+#### fix the percent axis!!! 
+
+ggplot(dat, aes(x = female, fill = treat)) +
+  geom_bar(position = "dodge") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Distribution of treatment and control groups by gender",
+    x = "Gender",
+    y = "Percent",
+    fill = "Group"
+  ) +
+  theme_minimal()
+
+
+?stat=count
+
+###### questions answered up to this point. Below it's just some code to help us get started with the next questions ######
+
+ggplot(dat, aes(x = math_std)) +
+  geom_histogram(binwidth = .1) +
+  labs(title = "Distribution of Standardized Math Scores",
+       x = "Standardized Math Score",
+       y = "Frequency")
+
+reg1 <- lm(math_std ~ treat, data = dat) 
+summary(reg1) 
+
+
+# ggplot(dat, aes(x = st_id, y = math_std)) +
+#   geom_smooth(method = "lm") +
+#   labs(title = "Math Scores by Treatment Status",
+#        x = "Treatment Status",
+#        y = "Standardized Math Score")
+
+head(dat)
+?factor
+```
+
+## Q2: Separate and joint estimation of causal effects
+```{r causal}
+# Convert variables to factors if needed (this helps R handle categorical variables properly)
+dat$treat <- as_factor(dat$treat)
+dat$female <- as_factor(dat$female)
+
+# For this question, you will need the lm() function for linear regression
+# Remember to use robust standard errors!
+
+# Model 1: Effect for male students only
+# Hint: Use filter() or subset to select only male students (female == "0")
+# lm(math_std ~ treat, data = ...)
+mod1 <- lm(math_std ~ treat, data = filter(dat, female == "male"), na.action = "na.exclude")
+summary(mod1)
+   
+# If you want to see the full model output, including coefficient estimates, standard errors, test statistics, and p-values, call summary(mod).
+
+# Model 2: Effect for female students only  
+mod2 <- lm(math_std ~ treat, data = filter(dat, female == "female"), na.action = "na.exclude")
+summary(mod2)
+
+# Model 3: Full model with interaction
+# Hint: Use the formula: math_std ~ treat*female
+# The * automatically includes main effects and interaction
+mod3 <- lm(math_std ~ treat*female, data = dat, na.action = "na.exclude")
+summary(mod3)
+
+# This code will output your regression results into a nice table
+# (Similar to esttab in Stata)
+stargazer(mod1, mod2, mod3, 
+          type = "text",
+          column.labels = c("Male", "Female", "Full"),
+          title = "...WRITE A TITLE HERE...",
+          star.char = c("*", "**", "***"),
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          notes = c("*p<0.05; **p<0.01; ***p<0.001"),
+          notes.append = FALSE)
+
+
+```
+
+
+## Additional Notes for Students:
+
+### Helpful R Tips:
+1. **Filtering data**: Use `filter()` from dplyr
+   - Example: `filter(dat, female == 0)`
+
+2. **Creating groups**: For analysis by groups, you can:
+   - Use `group_by()` and `summarize()` from dplyr
+   - Use the `by()` function in base R
+   - Filter and analyze separately
+
+3. **Getting help**: Type `?function_name` in the console to see documentation
+   - Example: `?lm` for help with linear models
+
+4. **Checking your work**: Use `summary()` on your model objects to see detailed output
+
+5. **For the interaction model**: Remember that `treat*female` in the formula 
+   automatically includes both main effects and the interaction term
