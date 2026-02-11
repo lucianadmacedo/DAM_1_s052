@@ -73,7 +73,7 @@ print(prop.table(counts_table, margin = 1))
 
 dat %>% group_by(female, treat) %>% summarize(mean_score = mean(math_std,na.rm = TRUE))
 
-### Histogram of math scores on gender and treatment 
+### v1: Histogram of math scores on gender and treatment 
 dat$female_f <- factor(dat$female,
                        levels = c(0, 1),
                        labels = c("Male", "Female"))
@@ -97,7 +97,7 @@ grid.arrange(grobs = list(gender_hist,treat_hist))
 ggplot(dat, aes(x = female, y= math_std)) +
   geom_point(fill = "light blue", color = "black") 
 
-### Histogram per group
+### v2: Histogram per group
 f_t <- dat%>%filter(female == 1, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Treated")
 f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")
 m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")
@@ -105,7 +105,17 @@ m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_hi
 
 grid.arrange(grobs = list(f_t, f_c, m_t, m_c))
 
-### Histogram grouped by gender, colored by treat
+
+### V3: Histogram of grouped by gender, colored by treat, counts percentaged 
+f_t_dat <- dat%>%filter(female == 1, treat == 1) 
+f_t <- f_t_dat %>%ggplot(aes(x=math_std, y= after_stat(100*count/ sum(count))))+geom_histogram()+ggtitle("Female in Treated")+ xlim(-5, 5)
+f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")+ xlim(-5, 5)
+m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")+ xlim(-5, 5)
+m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")+ xlim(-5, 5)
+
+grid.arrange(grobs = list(f_t, f_c, m_t, m_c))
+
+### Final version: Histogram grouped by gender, colored by treat
 
 library(dplyr)
 library(ggplot2)
@@ -149,26 +159,10 @@ f_c_dat <- origin%>%filter(female == 1, treat == 0)
 m_t_dat <- origin%>%filter(female == 0, treat == 1) 
 m_c_dat <- origin%>%filter(female == 0, treat == 0)
 
+dat %>% group_by(female, treat) %>% summarize(skewness = skewness(math_std,na.rm = TRUE))
+dat %>% group_by(female, treat) %>% summarize(mean_score = mean(math_std,na.rm = TRUE))
+dat %>% group_by(female, treat) %>% summarize(standard_deviation = sd(math_std,na.rm = TRUE))
 
-skewness(f_t_dat$math_std)
-skewness(f_c_dat$math_std)
-skewness(m_t_dat$math_std)
-skewness(m_c_dat$math_std)
-
-
-
-### Histogram of grouped by gender, colored by treat, counts percentaged 
-### Histogram per group
-## TODO: Adjust the x and y range to be identical 
-f_t_dat <- dat%>%filter(female == 1, treat == 1) 
-f_t <- f_t_dat %>%ggplot(aes(x=math_std, y= after_stat(100*count/ sum(count))))+geom_histogram()+ggtitle("Female in Treated")+ xlim(-5, 5)
-f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")+ xlim(-5, 5)
-m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")+ xlim(-5, 5)
-m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")+ xlim(-5, 5)
-
-
-
-grid.arrange(grobs = list(f_t, f_c, m_t, m_c))
 
 ## Q2: Separate and joint estimation of causal effects
 ```{r causal}
