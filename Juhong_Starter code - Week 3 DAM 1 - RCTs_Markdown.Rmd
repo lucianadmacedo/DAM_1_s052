@@ -215,6 +215,23 @@ library(ggplot2)
 theme_set(theme_sjplot())
 plot_model(mod3, type="int")
 
+boxplot(math_std ~ treat, data = dat, horizontal=TRUE, main = "Horizontal Boxplot of Endline Math Scores by Group", xlab="Standardized math scores", ylab="Group")
+
+library(dplyr)
+
+dat2 <- dat %>%
+  mutate(group = case_when(
+    treat == 1 & female == 1 ~ "Female Treated",
+    treat == 1 & female == 0 ~ "Male Treated",
+    treat == 0 & female == 1 ~ "Female Control",
+    treat == 0 & female == 0 ~ "Male Control"
+  ))
+
+
+ggplot(dat2, aes(x= factor(group), y=math_std))+geom_boxplot(fill="lightblue")+coord_flip()+theme_minimal()+labs(main = "Horizontal Boxplot of Endline Math Scores by Group", y="Endline math scores", x ="Group")+ylim(-4, 4)
+
+
+
 
 ## Additional Notes for Students:
 
