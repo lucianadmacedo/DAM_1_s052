@@ -37,8 +37,8 @@ setwd("/Users/juhong/Desktop/S052/Data")
 ##Data: Thanks to Prof. Alejandro Ganimian and coauthors Karthik Muralidharan and Abhijeet Singh for this data
 ```{r importdata2}
 # Load the data
-dat <- read_dta("mindspark_data.dta")
-origin <- read_dta("mindspark_data.dta")
+dat <- read_dta("/Users/juhong/Desktop/S052/W3/mindspark_data.dta")
+origin <- read_dta("/Users/juhong/Desktop/S052/W3/mindspark_data.dta")
 ```
 
 ## Q1: Exploratory Data Analysis
@@ -61,11 +61,11 @@ origin <- read_dta("mindspark_data.dta")
 sum(is.na(dat))
 dat <- drop_na(dat)
 
-dat$treat %>% table()
+dat$female %>% table()
 
 head(dat)
 413/(124+413)*100
-
+470/(149+470)*100
 
 counts_table <- table(dat$female)
 print(prop.table(counts_table, margin = 1))
@@ -122,7 +122,7 @@ m_all <- dat %>%
     alpha = 0.6
   ) +
   ggtitle("Male") +
-  labs(fill = "Group", y = "Percent for each group")
+  labs(fill = "Group", y = "Percent for each group")+xlim(-4, 4)+ylim(0, 8)
 
 f_all <- dat %>% 
   filter(female == 1) %>% 
@@ -135,18 +135,38 @@ f_all <- dat %>%
     alpha = 0.6
   ) +
   ggtitle("Female") +
-  labs(fill = "Group", y = "Percent for each group")
+  labs(fill = "Group", y = "Percent for each group")+xlim(-4, 4)+ylim(0, 8)
 
 grid.arrange(grobs = list(f_all, m_all))
 
 
+library(e1071)
+
+origin <- drop_na(origin)
+
+f_t_dat <- origin%>%filter(female == 1, treat == 1) 
+f_c_dat <- origin%>%filter(female == 1, treat == 0)
+m_t_dat <- origin%>%filter(female == 0, treat == 1) 
+m_c_dat <- origin%>%filter(female == 0, treat == 0)
+
+
+skewness(f_t_dat$math_std)
+skewness(f_c_dat$math_std)
+skewness(m_t_dat$math_std)
+skewness(m_c_dat$math_std)
+
+
+
 ### Histogram of grouped by gender, colored by treat, counts percentaged 
 ### Histogram per group
+## TODO: Adjust the x and y range to be identical 
 f_t_dat <- dat%>%filter(female == 1, treat == 1) 
-f_t <- f_t_dat %>%ggplot(aes(x=math_std, y= after_stat(100*count/ sum(count))))+geom_histogram()+ggtitle("Female in Treated")
-f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")
-m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")
-m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")
+f_t <- f_t_dat %>%ggplot(aes(x=math_std, y= after_stat(100*count/ sum(count))))+geom_histogram()+ggtitle("Female in Treated")+ xlim(-5, 5)
+f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")+ xlim(-5, 5)
+m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")+ xlim(-5, 5)
+m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")+ xlim(-5, 5)
+
+
 
 grid.arrange(grobs = list(f_t, f_c, m_t, m_c))
 
@@ -199,7 +219,6 @@ library(sjPlot)
 library(sjmisc)
 library(ggplot2)
 theme_set(theme_sjplot())
-head(dat)
 plot_model(mod3, type="int")
 
 
