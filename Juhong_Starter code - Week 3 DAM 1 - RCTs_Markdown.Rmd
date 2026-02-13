@@ -1,12 +1,15 @@
 ---
 title: |
-  <center> S-052: Intermediate and Advanced Statistical Methods </center>
   <center> for Applied Educational Research </center>
   <center> Spring 2026 </center>
   <center> Week 3 Data Analytic Memo Starter Code </center>
+  <center> S-052: Intermediate and Advanced Statistical Methods </center>
 author: "Sara Ji and Bailey Buchanan"
 date: "Last Modified: Feb 2026"
 output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ### RQ: What is the causal effect of technology-led afterschool on math scores?
@@ -16,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Load in packages
+
 ```{r packages, warning = FALSE, message = FALSE}
 # These packages will be helpful for your analysis
 library(foreign)    # For reading various data formats
@@ -28,13 +32,16 @@ require(gridExtra)
 ```
 
 ## Define the working directory and load data
+
 ```{r setwd}
 # Set your working directory to where your data file is located
 # Update the path below to match your file location
 setwd("/Users/juhong/Desktop/S052/Data")
 ```
 
-##Data: Thanks to Prof. Alejandro Ganimian and coauthors Karthik Muralidharan and Abhijeet Singh for this data
+##Data: Thanks to Prof. Alejandro Ganimian and coauthors Karthik
+Muralidharan and Abhijeet Singh for this data
+
 ```{r importdata2}
 # Load the data
 dat <- read_dta("/Users/juhong/Desktop/S052/W3/mindspark_data.dta")
@@ -42,6 +49,7 @@ origin <- read_dta("/Users/juhong/Desktop/S052/W3/mindspark_data.dta")
 ```
 
 ## Q1: Exploratory Data Analysis
+
 ```{r explore}
 # For this question, you will need:
 # - The hist() function or ggplot() with geom_histogram() for histograms
@@ -58,113 +66,102 @@ origin <- read_dta("/Users/juhong/Desktop/S052/W3/mindspark_data.dta")
 # - Example: `?lm` for help with linear models
 ```
 
-sum(is.na(dat))
-dat <- drop_na(dat)
+sum(is.na(dat)) dat \<- drop_na(dat)
 
-dat$female %>% table()
+dat\$female %\>% table()
 
-head(dat)
-413/(124+413)*100
-470/(149+470)*100
+head(dat) 413/(124+413)*100 470/(149+470)*100
 
-counts_table <- table(dat$female)
-print(prop.table(counts_table, margin = 1))
+counts_table \<- table(dat\$female) print(prop.table(counts_table,
+margin = 1))
 
+dat %\>% group_by(female, treat) %\>% summarize(mean_score =
+mean(math_std,na.rm = TRUE))
 
-dat %>% group_by(female, treat) %>% summarize(mean_score = mean(math_std,na.rm = TRUE))
+### v1: Histogram of math scores on gender and treatment
 
-### v1: Histogram of math scores on gender and treatment 
-dat$female_f <- factor(dat$female,
-                       levels = c(0, 1),
-                       labels = c("Male", "Female"))
+dat$female_f <- factor(dat$female, levels = c(0, 1), labels = c("Male",
+"Female"))
 
-dat$treat_f <- factor(dat$treat,
-                      levels = c(0, 1),
-                      labels = c("Control", "Treatment"))
-                      
-gender_hist <- ggplot(dat, aes(x = math_std)) +
-  geom_histogram(fill = "light blue",  #Set bar fill color, 
-                 color = "black") + #Set bar border color
-  facet_wrap(~female_f) 
-  
-treat_hist <- ggplot(dat, aes(x = math_std)) +
-  geom_histogram(fill = "light pink", color = "black") + 
-  facet_wrap(~treat_f) 
-  
+dat$treat_f <- factor(dat$treat, levels = c(0, 1), labels = c("Control",
+"Treatment"))
+
+gender_hist \<- ggplot(dat, aes(x = math_std)) + geom_histogram(fill =
+"light blue", #Set bar fill color, color = "black") + #Set bar border
+color facet_wrap(\~female_f)
+
+treat_hist \<- ggplot(dat, aes(x = math_std)) + geom_histogram(fill =
+"light pink", color = "black") + facet_wrap(\~treat_f)
+
 grid.arrange(grobs = list(gender_hist,treat_hist))
 
-
-ggplot(dat, aes(x = female, y= math_std)) +
-  geom_point(fill = "light blue", color = "black") 
+ggplot(dat, aes(x = female, y= math_std)) + geom_point(fill = "light
+blue", color = "black")
 
 ### v2: Histogram per group
-f_t <- dat%>%filter(female == 1, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Treated")
-f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")
-m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")
-m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")
+
+f_t \<- dat%\>%filter(female == 1, treat == 1) %\>%
+ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Treated")
+f_c \<- dat%\>%filter(female == 1, treat == 0) %\>%
+ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")
+m_t \<- dat%\>%filter(female == 0, treat == 1) %\>%
+ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated") m_c
+\<- dat%\>%filter(female == 0, treat == 0) %\>%
+ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")
 
 grid.arrange(grobs = list(f_t, f_c, m_t, m_c))
 
+### V3: Histogram of grouped by gender, colored by treat, counts percentaged
 
-### V3: Histogram of grouped by gender, colored by treat, counts percentaged 
-f_t_dat <- dat%>%filter(female == 1, treat == 1) 
-f_t <- f_t_dat %>%ggplot(aes(x=math_std, y= after_stat(100*count/ sum(count))))+geom_histogram()+ggtitle("Female in Treated")+ xlim(-5, 5)
-f_c <- dat%>%filter(female == 1, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in Controlled")+ xlim(-5, 5)
-m_t <- dat%>%filter(female == 0, treat == 1) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Treated")+ xlim(-5, 5)
-m_c <- dat%>%filter(female == 0, treat == 0) %>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in Controlled")+ xlim(-5, 5)
+f_t_dat \<- dat%\>%filter(female == 1, treat == 1) f_t \<- f_t_dat
+%\>%ggplot(aes(x=math_std, y= after_stat(100\*count/
+sum(count))))+geom_histogram()+ggtitle("Female in Treated")+ xlim(-5, 5)
+f_c \<- dat%\>%filter(female == 1, treat == 0) %\>%
+ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Female in
+Controlled")+ xlim(-5, 5) m_t \<- dat%\>%filter(female == 0, treat == 1)
+%\>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in
+Treated")+ xlim(-5, 5) m_c \<- dat%\>%filter(female == 0, treat == 0)
+%\>% ggplot(aes(x=math_std))+geom_histogram()+ggtitle("Male in
+Controlled")+ xlim(-5, 5)
 
 grid.arrange(grobs = list(f_t, f_c, m_t, m_c))
 
 ### Final version: Histogram grouped by gender, colored by treat
 
-library(dplyr)
-library(ggplot2)
-library(gridExtra)
+library(dplyr) library(ggplot2) library(gridExtra)
 
-m_all <- dat %>% 
-  filter(female == 0) %>% 
-  ggplot(aes(x = math_std,
-             fill  = treat_f,
-             group = treat_f)) +                        # group by treat
-  geom_histogram(
-    aes(y = after_stat(100 * count / sum(count))),     # % within each (male, treat)
-    position = "identity",
-    alpha = 0.6
-  ) +
-  ggtitle("Male") +
-  labs(fill = "Group", y = "Percent for each group")+xlim(-4, 4)+ylim(0, 8)
+m_all \<- dat %\>% filter(female == 0) %\>% ggplot(aes(x = math_std,
+fill = treat_f, group = treat_f)) + \# group by treat geom_histogram(
+aes(y = after_stat(100 \* count / sum(count))), \# % within each (male,
+treat) position = "identity", alpha = 0.6 ) + ggtitle("Male") +
+labs(fill = "Group", y = "Percent for each group")+xlim(-4, 4)+ylim(0,
+8)
 
-f_all <- dat %>% 
-  filter(female == 1) %>% 
-  ggplot(aes(x = math_std,
-             fill  = treat_f,
-             group = treat_f)) +
-  geom_histogram(
-    aes(y = after_stat(100 * count / sum(count))),     # % within each (female, treat)
-    position = "identity",
-    alpha = 0.6
-  ) +
-  ggtitle("Female") +
-  labs(fill = "Group", y = "Percent for each group")+xlim(-4, 4)+ylim(0, 8)
+f_all \<- dat %\>% filter(female == 1) %\>% ggplot(aes(x = math_std,
+fill = treat_f, group = treat_f)) + geom_histogram( aes(y =
+after_stat(100 \* count / sum(count))), \# % within each (female, treat)
+position = "identity", alpha = 0.6 ) + ggtitle("Female") + labs(fill =
+"Group", y = "Percent for each group")+xlim(-4, 4)+ylim(0, 8)
 
 grid.arrange(grobs = list(f_all, m_all))
 
-
 library(e1071)
 
-origin <- drop_na(origin)
+origin \<- drop_na(origin)
 
-f_t_dat <- origin%>%filter(female == 1, treat == 1) 
-f_c_dat <- origin%>%filter(female == 1, treat == 0)
-m_t_dat <- origin%>%filter(female == 0, treat == 1) 
-m_c_dat <- origin%>%filter(female == 0, treat == 0)
+f_t_dat \<- origin%\>%filter(female == 1, treat == 1) f_c_dat \<-
+origin%\>%filter(female == 1, treat == 0) m_t_dat \<-
+origin%\>%filter(female == 0, treat == 1) m_c_dat \<-
+origin%\>%filter(female == 0, treat == 0)
 
-dat %>% group_by(female, treat) %>% summarize(skewness = skewness(math_std,na.rm = TRUE))
-dat %>% group_by(female, treat) %>% summarize(mean_score = mean(math_std,na.rm = TRUE))
-dat %>% group_by(female, treat) %>% summarize(standard_deviation = sd(math_std,na.rm = TRUE))
-
+dat %\>% group_by(female, treat) %\>% summarize(skewness =
+skewness(math_std,na.rm = TRUE)) dat %\>% group_by(female, treat) %\>%
+summarize(mean_score = mean(math_std,na.rm = TRUE)) dat %\>%
+group_by(female, treat) %\>% summarize(standard_deviation =
+sd(math_std,na.rm = TRUE))
 
 ## Q2: Separate and joint estimation of causal effects
+
 ```{r causal}
 # Convert variables to factors if needed (this helps R handle categorical variables properly)
 dat$treat <- as_factor(dat$treat)
@@ -207,47 +204,88 @@ stargazer(mod1, mod2, mod3,
 
 
 ```
-## Coding Pathway 
 
-library(sjPlot)
-library(sjmisc)
-library(ggplot2)
-theme_set(theme_sjplot())
-plot_model(mod3, type="int")
-
-boxplot(math_std ~ treat, data = dat, horizontal=TRUE, main = "Horizontal Boxplot of Endline Math Scores by Group", xlab="Standardized math scores", ylab="Group")
-
+## Coding Pathway
 library(dplyr)
 
-dat2 <- dat %>%
-  mutate(group = case_when(
-    treat == 1 & female == 1 ~ "Female Treated",
-    treat == 1 & female == 0 ~ "Male Treated",
-    treat == 0 & female == 1 ~ "Female Control",
-    treat == 0 & female == 0 ~ "Male Control"
-  ))
+########
+# Extract coefficients from Model 3
+coef_summary <- summary(mod3)$coefficients
+intercept <- coef_summary["(Intercept)", "Estimate"]
+treat_effect <- coef_summary["treat1", "Estimate"]
+female_effect <- coef_summary["female1", "Estimate"]
+interaction <- coef_summary["treat1:female1", "Estimate"]
 
+# Create data frame with all 4 estimated values
+plot_data <- data.frame(
+  group = c("Male Control", "Male Treatment", "Female Control", "Female Treatment"),
+  gender = c("Male", "Male", "Female", "Female"),
+  treatment = c("Control", "Treatment", "Control", "Treatment"),
+  estimate = c(
+    intercept,                                    # Male Control
+    intercept + treat_effect,                     # Male Treatment
+    intercept + female_effect,                    # Female Control
+    intercept + treat_effect + female_effect + interaction  # Female Treatment
+  ),
+  se = c(
+    coef_summary["(Intercept)", "Std. Error"],
+    sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + 
+         vcov(mod3)["treat1", "treat1"] + 
+         2 * vcov(mod3)["(Intercept)", "treat1"]),
+    sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + 
+         vcov(mod3)["female1", "female1"] + 
+         2 * vcov(mod3)["(Intercept)", "female1"]),
+    sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + 
+         vcov(mod3)["treat1", "treat1"] + 
+         vcov(mod3)["female1", "female1"] + 
+         vcov(mod3)["treat1:female1", "treat1:female1"] +
+         2 * vcov(mod3)["(Intercept)", "treat1"] +
+         2 * vcov(mod3)["(Intercept)", "female1"] +
+         2 * vcov(mod3)["(Intercept)", "treat1:female1"] +
+         2 * vcov(mod3)["treat1", "female1"] +
+         2 * vcov(mod3)["treat1", "treat1:female1"] +
+         2 * vcov(mod3)["female1", "treat1:female1"])
+  )
+)
 
-ggplot(dat2, aes(x= factor(group), y=math_std))+geom_boxplot(fill="lightblue")+coord_flip()+theme_minimal()+labs(main = "Horizontal Boxplot of Endline Math Scores by Group", y="Endline math scores", x ="Group")+ylim(-4, 4)
-
-
-
+# BAR GRAPH showing all 4 values
+ggplot(plot_data, aes(x = gender, y = estimate, fill = treatment)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), alpha = 1) +
+  geom_errorbar(aes(ymin = estimate - se, ymax = estimate + se), 
+                width = 0.2, 
+                position = position_dodge(width = 0.8),
+                linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_minimal() +
+  labs(
+    x = "Gender",
+    y = "Standardized Math Score",
+    fill = "Treatment"
+  ) +
+  scale_fill_manual(values = c("Control" = "lightblue", "Treatment" = "pink"))
 
 ## Additional Notes for Students:
 
 ### Helpful R Tips:
-1. **Filtering data**: Use `filter()` from dplyr
-   - Example: `filter(dat, female == 0)`
 
-2. **Creating groups**: For analysis by groups, you can:
-   - Use `group_by()` and `summarize()` from dplyr
-   - Use the `by()` function in base R
-   - Filter and analyze separately
+1.  **Filtering data**: Use `filter()` from dplyr
 
-3. **Getting help**: Type `?function_name` in the console to see documentation
-   - Example: `?lm` for help with linear models
+    -   Example: `filter(dat, female == 0)`
 
-4. **Checking your work**: Use `summary()` on your model objects to see detailed output
+2.  **Creating groups**: For analysis by groups, you can:
 
-5. **For the interaction model**: Remember that `treat*female` in the formula 
-   automatically includes both main effects and the interaction term
+    -   Use `group_by()` and `summarize()` from dplyr
+    -   Use the `by()` function in base R
+    -   Filter and analyze separately
+
+3.  **Getting help**: Type `?function_name` in the console to see
+    documentation
+
+    -   Example: `?lm` for help with linear models
+
+4.  **Checking your work**: Use `summary()` on your model objects to see
+    detailed output
+
+5.  **For the interaction model**: Remember that `treat*female` in the
+    formula automatically includes both main effects and the interaction
+    term

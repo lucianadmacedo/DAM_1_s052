@@ -1,0 +1,536 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdfauthor={Sara Ji and Bailey Buchanan},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{for Applied Educational Research
+
+Spring 2026
+
+Week 3 Data Analytic Memo Starter Code
+
+S-052: Intermediate and Advanced Statistical Methods}
+\author{Sara Ji and Bailey Buchanan}
+\date{Last Modified: Feb 2026}
+
+\begin{document}
+\maketitle
+
+\subsubsection{RQ: What is the causal effect of technology-led
+afterschool on math
+scores?}\label{rq-what-is-the-causal-effect-of-technology-led-afterschool-on-math-scores}
+
+\subsection{Load in packages}\label{load-in-packages}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# These packages will be helpful for your analysis}
+\FunctionTok{library}\NormalTok{(foreign)    }\CommentTok{\# For reading various data formats}
+\FunctionTok{library}\NormalTok{(haven)      }\CommentTok{\# For reading Stata files}
+\FunctionTok{library}\NormalTok{(tidyverse)  }\CommentTok{\# For data manipulation and visualization}
+\FunctionTok{library}\NormalTok{(stargazer)  }\CommentTok{\# For nice regression tables}
+\FunctionTok{require}\NormalTok{(gridExtra)}
+\CommentTok{\# If you haven\textquotesingle{}t installed these packages yet, run:}
+\CommentTok{\# install.packages(c("foreign", "haven", "tidyverse", "stargazer"))}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Define the working directory and load
+data}\label{define-the-working-directory-and-load-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Set your working directory to where your data file is located}
+\CommentTok{\# Update the path below to match your file location}
+\FunctionTok{setwd}\NormalTok{(}\StringTok{"/Users/juhong/Desktop/S052/Data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\#\#Data: Thanks to Prof.~Alejandro Ganimian and coauthors Karthik
+Muralidharan and Abhijeet Singh for this data
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Load the data}
+\NormalTok{dat }\OtherTok{\textless{}{-}} \FunctionTok{read\_dta}\NormalTok{(}\StringTok{"/Users/juhong/Desktop/S052/W3/mindspark\_data.dta"}\NormalTok{)}
+\NormalTok{origin }\OtherTok{\textless{}{-}} \FunctionTok{read\_dta}\NormalTok{(}\StringTok{"/Users/juhong/Desktop/S052/W3/mindspark\_data.dta"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Q1: Exploratory Data
+Analysis}\label{q1-exploratory-data-analysis}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# For this question, you will need:}
+\CommentTok{\# {-} The hist() function or ggplot() with geom\_histogram() for histograms}
+\CommentTok{\# {-} The summarize() function from dplyr or the summary() function for descriptive statistics}
+\CommentTok{\# {-} You can calculate statistics by group using group\_by() and summarize() in dplyr}
+\CommentTok{\# {-} Or use aggregate() or tapply() in base R}
+\CommentTok{\# }
+\CommentTok{\# Hint: To get means by groups, you might use something like:}
+\CommentTok{\# dat \%\textgreater{}\%}
+   \CommentTok{\# group\_by(variable1, variable2) \%\textgreater{}\%}
+   \CommentTok{\# summarize(mean\_score = mean(math\_std, na.rm = TRUE))}
+
+\CommentTok{\# Before turning to Google, AI, etc., try typing \textasciigrave{}?function\_name\textasciigrave{} in the console to see documentation}
+\CommentTok{\# {-} Example: \textasciigrave{}?lm\textasciigrave{} for help with linear models}
+\end{Highlighting}
+\end{Shaded}
+
+sum(is.na(dat)) dat \textless- drop\_na(dat)
+
+dat\$female \%\textgreater\% table()
+
+head(dat) 413/(124+413)\emph{100 470/(149+470)}100
+
+counts\_table \textless- table(dat\$female)
+print(prop.table(counts\_table, margin = 1))
+
+dat \%\textgreater\% group\_by(female, treat) \%\textgreater\%
+summarize(mean\_score = mean(math\_std,na.rm = TRUE))
+
+\subsubsection{v1: Histogram of math scores on gender and
+treatment}\label{v1-histogram-of-math-scores-on-gender-and-treatment}
+
+dat\(female_f <- factor(dat\)female, levels = c(0, 1), labels =
+c(``Male'', ``Female''))
+
+dat\(treat_f <- factor(dat\)treat, levels = c(0, 1), labels =
+c(``Control'', ``Treatment''))
+
+gender\_hist \textless- ggplot(dat, aes(x = math\_std)) +
+geom\_histogram(fill = ``light blue'', \#Set bar fill color, color =
+``black'') + \#Set bar border color
+facet\_wrap(\textasciitilde female\_f)
+
+treat\_hist \textless- ggplot(dat, aes(x = math\_std)) +
+geom\_histogram(fill = ``light pink'', color = ``black'') +
+facet\_wrap(\textasciitilde treat\_f)
+
+grid.arrange(grobs = list(gender\_hist,treat\_hist))
+
+ggplot(dat, aes(x = female, y= math\_std)) + geom\_point(fill = ``light
+blue'', color = ``black'')
+
+\subsubsection{v2: Histogram per group}\label{v2-histogram-per-group}
+
+f\_t \textless- dat\%\textgreater\%filter(female == 1, treat == 1)
+\%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Female in
+Treated'') f\_c \textless- dat\%\textgreater\%filter(female == 1, treat
+== 0) \%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Female in
+Controlled'') m\_t \textless- dat\%\textgreater\%filter(female == 0,
+treat == 1) \%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Male in Treated'')
+m\_c \textless- dat\%\textgreater\%filter(female == 0, treat == 0)
+\%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Male in
+Controlled'')
+
+grid.arrange(grobs = list(f\_t, f\_c, m\_t, m\_c))
+
+\subsubsection{V3: Histogram of grouped by gender, colored by treat,
+counts
+percentaged}\label{v3-histogram-of-grouped-by-gender-colored-by-treat-counts-percentaged}
+
+f\_t\_dat \textless- dat\%\textgreater\%filter(female == 1, treat == 1)
+f\_t \textless- f\_t\_dat \%\textgreater\%ggplot(aes(x=math\_std, y=
+after\_stat(100*count/ sum(count))))+geom\_histogram()+ggtitle(``Female
+in Treated'')+ xlim(-5, 5) f\_c \textless-
+dat\%\textgreater\%filter(female == 1, treat == 0) \%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Female in
+Controlled'')+ xlim(-5, 5) m\_t \textless-
+dat\%\textgreater\%filter(female == 0, treat == 1) \%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Male in Treated'')+
+xlim(-5, 5) m\_c \textless- dat\%\textgreater\%filter(female == 0, treat
+== 0) \%\textgreater\%
+ggplot(aes(x=math\_std))+geom\_histogram()+ggtitle(``Male in
+Controlled'')+ xlim(-5, 5)
+
+grid.arrange(grobs = list(f\_t, f\_c, m\_t, m\_c))
+
+\subsubsection{Final version: Histogram grouped by gender, colored by
+treat}\label{final-version-histogram-grouped-by-gender-colored-by-treat}
+
+library(dplyr) library(ggplot2) library(gridExtra)
+
+m\_all \textless- dat \%\textgreater\% filter(female == 0)
+\%\textgreater\% ggplot(aes(x = math\_std, fill = treat\_f, group =
+treat\_f)) + \# group by treat geom\_histogram( aes(y = after\_stat(100
+* count / sum(count))), \# \% within each (male, treat) position =
+``identity'', alpha = 0.6 ) + ggtitle(``Male'') + labs(fill = ``Group'',
+y = ``Percent for each group'')+xlim(-4, 4)+ylim(0, 8)
+
+f\_all \textless- dat \%\textgreater\% filter(female == 1)
+\%\textgreater\% ggplot(aes(x = math\_std, fill = treat\_f, group =
+treat\_f)) + geom\_histogram( aes(y = after\_stat(100 * count /
+sum(count))), \# \% within each (female, treat) position = ``identity'',
+alpha = 0.6 ) + ggtitle(``Female'') + labs(fill = ``Group'', y =
+``Percent for each group'')+xlim(-4, 4)+ylim(0, 8)
+
+grid.arrange(grobs = list(f\_all, m\_all))
+
+library(e1071)
+
+origin \textless- drop\_na(origin)
+
+f\_t\_dat \textless- origin\%\textgreater\%filter(female == 1, treat ==
+1) f\_c\_dat \textless- origin\%\textgreater\%filter(female == 1, treat
+== 0) m\_t\_dat \textless- origin\%\textgreater\%filter(female == 0,
+treat == 1) m\_c\_dat \textless- origin\%\textgreater\%filter(female ==
+0, treat == 0)
+
+dat \%\textgreater\% group\_by(female, treat) \%\textgreater\%
+summarize(skewness = skewness(math\_std,na.rm = TRUE)) dat
+\%\textgreater\% group\_by(female, treat) \%\textgreater\%
+summarize(mean\_score = mean(math\_std,na.rm = TRUE)) dat
+\%\textgreater\% group\_by(female, treat) \%\textgreater\%
+summarize(standard\_deviation = sd(math\_std,na.rm = TRUE))
+
+\subsection{Q2: Separate and joint estimation of causal
+effects}\label{q2-separate-and-joint-estimation-of-causal-effects}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Convert variables to factors if needed (this helps R handle categorical variables properly)}
+\NormalTok{dat}\SpecialCharTok{$}\NormalTok{treat }\OtherTok{\textless{}{-}} \FunctionTok{as\_factor}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{treat)}
+\NormalTok{dat}\SpecialCharTok{$}\NormalTok{female }\OtherTok{\textless{}{-}} \FunctionTok{as\_factor}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{female)}
+
+\CommentTok{\# For this question, you will need the lm() function for linear regression}
+\CommentTok{\# Remember to use robust standard errors!}
+\NormalTok{m\_all\_dat }\OtherTok{\textless{}{-}}\NormalTok{ dat }\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(female }\SpecialCharTok{==} \DecValTok{0}\NormalTok{)}
+\CommentTok{\# Model 1: Effect for male students only}
+\CommentTok{\# Hint: Use filter() or subset to select only male students (female == "0")}
+\CommentTok{\# lm(math\_std \textasciitilde{} treat, data = ...)}
+\FunctionTok{head}\NormalTok{(m\_all\_dat)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 4
+##   st_id treat female math_std
+##   <chr> <fct> <fct>     <dbl>
+## 1 GP001 0     0        1.72  
+## 2 GP002 1     0        0.599 
+## 3 GP007 1     0       -0.0312
+## 4 GP008 0     0        0.856 
+## 5 GP009 0     0        0.802 
+## 6 GP010 1     0        0.916
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mod1 }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(math\_std }\SpecialCharTok{\textasciitilde{}}\NormalTok{ treat, }\AttributeTok{data =}\NormalTok{ m\_all\_dat)}\CommentTok{\# Your code here}
+   
+\CommentTok{\# If you want to see the full model output, including coefficient estimates, standard errors, test statistics, and p{-}values, call summary(mod).}
+\FunctionTok{summary}\NormalTok{(mod1)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = math_std ~ treat, data = m_all_dat)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -3.14930 -0.47993  0.06435  0.61717  1.75570 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)   
+## (Intercept)   0.3346     0.1054   3.175   0.0019 **
+## treat1        0.4228     0.1515   2.791   0.0061 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.8431 on 122 degrees of freedom
+##   (25 observations deleted due to missingness)
+## Multiple R-squared:  0.06001,    Adjusted R-squared:  0.0523 
+## F-statistic: 7.788 on 1 and 122 DF,  p-value: 0.006105
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Model 2: Effect for female students only}
+\NormalTok{f\_all\_dat }\OtherTok{\textless{}{-}}\NormalTok{ dat}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(female }\SpecialCharTok{==} \DecValTok{1}\NormalTok{)}
+\NormalTok{mod2 }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(math\_std }\SpecialCharTok{\textasciitilde{}}\NormalTok{ treat, }\AttributeTok{data =}\NormalTok{ f\_all\_dat)}
+\FunctionTok{summary}\NormalTok{(mod2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = math_std ~ treat, data = f_all_dat)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.2424 -0.5564  0.0108  0.6537  2.5031 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  0.31839    0.06757   4.712 3.37e-06 ***
+## treat1       0.32757    0.09591   3.415 0.000701 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.9746 on 411 degrees of freedom
+##   (57 observations deleted due to missingness)
+## Multiple R-squared:  0.0276, Adjusted R-squared:  0.02523 
+## F-statistic: 11.66 on 1 and 411 DF,  p-value: 0.0007005
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Model 3: Full model with interaction}
+\CommentTok{\# Hint: Use the formula: math\_std \textasciitilde{} treat*female}
+\CommentTok{\# The * automatically includes main effects and interaction}
+\NormalTok{mod3 }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(math\_std }\SpecialCharTok{\textasciitilde{}}\NormalTok{ treat}\SpecialCharTok{*}\NormalTok{female, }\AttributeTok{data=}\NormalTok{dat)}
+\FunctionTok{summary}\NormalTok{(mod3)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = math_std ~ treat * female, data = dat)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.2424 -0.5549  0.0240  0.6503  2.5031 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)   
+## (Intercept)     0.33460    0.11826   2.829  0.00484 **
+## treat1          0.42283    0.17001   2.487  0.01319 * 
+## female1        -0.01621    0.13524  -0.120  0.90465   
+## treat1:female1 -0.09526    0.19384  -0.491  0.62333   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.9461 on 533 degrees of freedom
+##   (82 observations deleted due to missingness)
+## Multiple R-squared:  0.03429,    Adjusted R-squared:  0.02885 
+## F-statistic: 6.308 on 3 and 533 DF,  p-value: 0.0003288
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# This code will output your regression results into a nice table}
+\CommentTok{\# (Similar to esttab in Stata)}
+\FunctionTok{stargazer}\NormalTok{(mod1, mod2, mod3, }
+          \AttributeTok{type =} \StringTok{"text"}\NormalTok{,}
+          \AttributeTok{column.labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Male"}\NormalTok{, }\StringTok{"Female"}\NormalTok{, }\StringTok{"Full"}\NormalTok{),}
+          \AttributeTok{title =} \StringTok{"...WRITE A TITLE HERE..."}\NormalTok{,}
+          \AttributeTok{star.char =} \FunctionTok{c}\NormalTok{(}\StringTok{"*"}\NormalTok{, }\StringTok{"**"}\NormalTok{, }\StringTok{"***"}\NormalTok{),}
+          \AttributeTok{star.cutoffs =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.05}\NormalTok{, }\FloatTok{0.01}\NormalTok{, }\FloatTok{0.001}\NormalTok{),}
+          \AttributeTok{notes =} \FunctionTok{c}\NormalTok{(}\StringTok{"*p\textless{}0.05; **p\textless{}0.01; ***p\textless{}0.001"}\NormalTok{),}
+          \AttributeTok{notes.append =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## ...WRITE A TITLE HERE...
+## ========================================================================================
+##                                             Dependent variable:                         
+##                     --------------------------------------------------------------------
+##                                                   math_std                              
+##                             Male                  Female                   Full         
+##                              (1)                    (2)                    (3)          
+## ----------------------------------------------------------------------------------------
+## treat1                     0.423**               0.328***                 0.423*        
+##                            (0.152)                (0.096)                (0.170)        
+##                                                                                         
+## female1                                                                   -0.016        
+##                                                                          (0.135)        
+##                                                                                         
+## treat1:female1                                                            -0.095        
+##                                                                          (0.194)        
+##                                                                                         
+## Constant                   0.335**               0.318***                0.335**        
+##                            (0.105)                (0.068)                (0.118)        
+##                                                                                         
+## ----------------------------------------------------------------------------------------
+## Observations                 124                    413                    537          
+## R2                          0.060                  0.028                  0.034         
+## Adjusted R2                 0.052                  0.025                  0.029         
+## Residual Std. Error   0.843 (df = 122)       0.975 (df = 411)        0.946 (df = 533)   
+## F Statistic         7.788** (df = 1; 122) 11.664*** (df = 1; 411) 6.308*** (df = 3; 533)
+## ========================================================================================
+## Note:                                                      *p<0.05; **p<0.01; ***p<0.001
+\end{verbatim}
+
+\subsection{Coding Pathway}\label{coding-pathway}
+
+library(sjPlot) library(sjmisc) library(ggplot2)
+theme\_set(theme\_sjplot()) plot\_model(mod3, type=``int'')
+
+library(dplyr)
+
+dat2 \textless- dat \%\textgreater\% mutate(group = case\_when( treat ==
+1 \& female == 1 \textasciitilde{} ``Female Treated'', treat == 1 \&
+female == 0 \textasciitilde{} ``Male Treated'', treat == 0 \& female ==
+1 \textasciitilde{} ``Female Control'', treat == 0 \& female == 0
+\textasciitilde{} ``Male Control'' ))
+
+ggplot(dat2, aes(x = factor(group), y = math\_std, color =
+factor(treat))) + geom\_jitter(alpha = 1, position =
+position\_dodge(width = 0.5)) + stat\_summary(fun = mean, geom =
+``point'', size = 4, position = position\_dodge(width = 0.5)) +
+stat\_summary( fun = mean, fun.min = function(x) mean(x) -
+sd(x)/sqrt(length(x)), fun.max = function(x) mean(x) +
+sd(x)/sqrt(length(x)), geom = ``errorbar'', width = 0.2, position =
+position\_dodge(width = 0.5) ) + theme\_minimal() + labs( title =
+``Endline Math Scores by Group and Treatment'', y = ``Standardized Math
+Score'', x = ``Group'' ) + ylim(-4, 4) + scale\_color\_manual( values =
+c(``0'' = ``lightblue'', ``1'' = ``pink''), guide = ``none'' )
+
+\subsection{Additional Notes for
+Students:}\label{additional-notes-for-students}
+
+\subsubsection{Helpful R Tips:}\label{helpful-r-tips}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Filtering data}: Use \texttt{filter()} from dplyr
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Example: \texttt{filter(dat,\ female\ ==\ 0)}
+  \end{itemize}
+\item
+  \textbf{Creating groups}: For analysis by groups, you can:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Use \texttt{group\_by()} and \texttt{summarize()} from dplyr
+  \item
+    Use the \texttt{by()} function in base R
+  \item
+    Filter and analyze separately
+  \end{itemize}
+\item
+  \textbf{Getting help}: Type \texttt{?function\_name} in the console to
+  see documentation
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Example: \texttt{?lm} for help with linear models
+  \end{itemize}
+\item
+  \textbf{Checking your work}: Use \texttt{summary()} on your model
+  objects to see detailed output
+\item
+  \textbf{For the interaction model}: Remember that
+  \texttt{treat*female} in the formula automatically includes both main
+  effects and the interaction term
+\end{enumerate}
+
+\end{document}
