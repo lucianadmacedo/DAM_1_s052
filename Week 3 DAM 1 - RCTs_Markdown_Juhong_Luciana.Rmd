@@ -1,0 +1,238 @@
+---
+title: |
+  <center> for Applied Educational Research </center>
+  <center> Spring 2026 </center>
+  <center> Week 3 Data Analytic Memo Starter Code </center>
+  <center> S-052: Intermediate and Advanced Statistical Methods </center>
+author: "Sara Ji and Bailey Buchanan"
+date: "Last Modified: Feb 2026"
+output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+### RQ: What is the causal effect of technology-led afterschool on math scores?
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load in packages
+
+```{r packages, warning = FALSE, message = FALSE}
+# These packages will be helpful for your analysis
+library(foreign)    # For reading various data formats
+library(haven)      # For reading Stata files
+library(tidyverse)  # For data manipulation and visualization
+library(stargazer)  # For nice regression tables
+require(gridExtra)
+library(dplyr) 
+library(ggplot2) 
+library(e1071)
+```
+
+
+##Data: Thanks to Prof. Alejandro Ganimian and coauthors Karthik
+Muralidharan and Abhijeet Singh for this data
+
+```{r importdata2}
+# Load the data
+dat <- read_dta("mindspark_data.dta")
+origin <- read_dta("mindspark_data.dta")
+```
+
+## Q1: Exploratory Data Analysis
+
+```{r explore, warning = FALSE, message = FALSE}
+
+# question one: a) What percentage of students in the sample were female?
+percent_female <- mean(dat$female == 1) * 100
+# 75.92892 %
+
+# questions
+# b) What was the gender gap in endline scores among students who were not offered treatment?
+dat %>% group_by(female) %>% 
+    filter(treat == 0) %>% 
+    summarize(mean_score = mean(math_std,na.rm = TRUE))
+
+### TODO: write code to subtract the mean between gender and treat
+dat %>% group_by(female) %>% 
+    filter(treat == 0) %>% 
+    summarize(mean_score = mean(math_std,na.rm = TRUE)) %>%
+    summarize(gap_male_minus_female = 
+              mean_score[female == 0] - mean_score[female == 1])
+
+# c) What was the gender gap in endline scores among students who were offered treatment?
+dat %>% group_by(female) %>% 
+    filter(treat == 1) %>% 
+    summarize(mean_score = mean(math_std,na.rm = TRUE))
+
+
+### TODO: write code to subtract the mean between gender and treat
+dat %>% group_by(female) %>% 
+    filter(treat == 1) %>% 
+    summarize(mean_score = mean(math_std,na.rm = TRUE)) %>%
+    summarize(gap_male_minus_female = 
+              mean_score[female == 0] - mean_score[female == 1])
+
+### Histogram grouped by gender, colored by treat
+dat$treat_f <- factor(dat$treat, levels = c(0, 1), labels = c("Control",
+"Treatment"))
+
+
+m_all <- dat %>%
+  filter(female == 0) %>%                           # keep only males
+  ggplot(aes(x = math_std, fill = treat_f)) +       # fill by treatment group
+  geom_histogram(
+    aes(y = after_stat(100 * count / sum(count))),  # percent within full sample
+    position = "identity",
+    alpha = 0.6,
+    bins = 30                                       # choose bins as you like
+  ) +
+  ggtitle("Male") +
+  labs(fill = "Group", y = "Percent for each group", x = "Standardized math score") +
+  xlim(-4, 4) +
+  ylim(0, 8)
+
+f_all <- dat %>%
+  filter(female == 1) %>%
+  ggplot(aes(x = math_std, fill = treat_f)) +
+  geom_histogram(
+    aes(y = after_stat(100 * count / sum(count))),  # percent within each (female, treat)
+    position = "identity",
+    alpha = 0.6,
+    bins = 30
+  ) +
+  ggtitle("Female") +
+  labs(
+    fill = "Group",
+    y = "Percent for each group",
+    x = "Standardized math score"
+  ) +
+  xlim(-4, 4) +
+  ylim(0, 8)
+
+grid.arrange(grobs = list(f_all, m_all))
+```
+
+
+
+
+
+
+## Q2: Separate and joint estimation of causal effects
+
+```{r causal}
+# Convert variables to factors if needed (this helps R handle categorical variables properly)
+dat$treat <- as_factor(dat$treat)
+dat$female <- as_factor(dat$female)
+
+m_all_dat <- dat %>%filter(female == 0)
+
+# Model 1: Effect for male students only
+
+mod1 <- lm(math_std ~ treat, data = m_all_dat)# Your code here
+summary(mod1)
+
+# Model 2: Effect for female students only
+f_all_dat <- dat%>%filter(female == 1)
+mod2 <- lm(math_std ~ treat, data = f_all_dat)
+summary(mod2)
+
+# Model 3: Full model with interaction
+mod3 <- lm(math_std ~ treat*female, data=dat)
+summary(mod3)
+
+stargazer(mod1, mod2, mod3, 
+          type = "text",
+          column.labels = c("Male", "Female", "Full"),
+          title = "Model 1, Model 2, and Model 3",
+          star.char = c("*", "**", "***"),
+          star.cutoffs = c(0.05, 0.01, 0.001),
+          notes = c("*p<0.05; **p<0.01; ***p<0.001"),
+          notes.append = FALSE)
+
+
+```
+
+
+## Additional Notes for Students:
+
+```{r coding_pathway}
+
+# Extract coefficients from Model 3
+coef_summary   <- summary(mod3)$coefficients
+intercept      <- coef_summary["(Intercept)", "Estimate"]
+treat_effect   <- coef_summary["treat1", "Estimate"]
+female_effect  <- coef_summary["female1", "Estimate"]
+interaction    <- coef_summary["treat1:female1", "Estimate"]
+
+# Create data frame with all 4 estimated values
+plot_data <- data.frame(
+  group = c("Male Control", "Male Treatment", "Female Control", "Female Treatment"),
+  gender = c("Male", "Male", "Female", "Female"),
+  treatment = c("Control", "Treatment", "Control", "Treatment"),
+  estimate = c(
+    intercept,                                    # Male Control
+    intercept + treat_effect,                     # Male Treatment
+    intercept + female_effect,                    # Female Control
+    intercept + treat_effect + female_effect + interaction  # Female Treatment
+  ),
+  se = c(
+    # SE for Male Control
+    coef_summary["(Intercept)", "Std. Error"],
+    
+    # SE for Male Treatment
+    sqrt(
+      vcov(mod3)["(Intercept)", "(Intercept)"] +
+      vcov(mod3)["treat1", "treat1"] +
+      2 * vcov(mod3)["(Intercept)", "treat1"]
+    ),
+    
+    # SE for Female Control
+    sqrt(
+      vcov(mod3)["(Intercept)", "(Intercept)"] +
+      vcov(mod3)["female1", "female1"] +
+      2 * vcov(mod3)["(Intercept)", "female1"]
+    ),
+    
+    # SE for Female Treatment
+    sqrt(
+      vcov(mod3)["(Intercept)", "(Intercept)"] +
+      vcov(mod3)["treat1", "treat1"] +
+      vcov(mod3)["female1", "female1"] +
+      vcov(mod3)["treat1:female1", "treat1:female1"] +
+      2 * vcov(mod3)["(Intercept)", "treat1"] +
+      2 * vcov(mod3)["(Intercept)", "female1"] +
+      2 * vcov(mod3)["(Intercept)", "treat1:female1"] +
+      2 * vcov(mod3)["treat1", "female1"] +
+      2 * vcov(mod3)["treat1", "treat1:female1"] +
+      2 * vcov(mod3)["female1", "treat1:female1"]
+    )
+  )
+)
+
+# BAR GRAPH showing all 4 values
+ggplot(plot_data, aes(x = gender, y = estimate, fill = treatment)) +
+  geom_bar(
+    stat = "identity",
+    position = position_dodge(width = 0.8),
+    alpha = 1
+  ) +
+  geom_errorbar(
+    aes(ymin = estimate - se, ymax = estimate + se),
+    width = 0.2,
+    position = position_dodge(width = 0.8),
+    linewidth = 0.8
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_minimal() +
+  labs(
+    x = "Gender",
+    y = "Standardized Math Score",
+    fill = "Treatment"
+  ) +
+  scale_fill_manual(values = c("Control" = "lightblue", "Treatment" = "pink"))
+
+```
