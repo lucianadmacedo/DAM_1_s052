@@ -1,10 +1,11 @@
 ---
 title: |
-  <center> for Applied Educational Research </center>
-  <center> Spring 2026 </center>
-  <center> Week 3 Data Analytic Memo Starter Code </center>
-  <center> S-052: Intermediate and Advanced Statistical Methods </center>
-author: "Sara Ji and Bailey Buchanan"
+    <center> S-052: Intermediate and Advanced Statistical Methods </center>
+    <center> for Applied Educational Research </center>
+    <center> Spring 2026 </center>
+    <center> Week 3 Data Analytic Memo Starter Code </center>
+ 
+author: "Juhong Eom and Luciana Dias de Macedo "
 date: "Last Modified: Feb 2026"
 output: pdf_document
 editor_options: 
@@ -157,7 +158,7 @@ stargazer(mod1, mod2, mod3,
 ```
 
 
-## Additional Notes for Students:
+## Coding Pathway:
 
 ```{r coding_pathway}
 
