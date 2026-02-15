@@ -1,10 +1,9 @@
 ---
 title: |
-  <center> for Applied Educational Research </center>
   <center> Spring 2026 </center>
-  <center> Week 3 Data Analytic Memo Starter Code </center>
+  <center> Week 3 Data Analytic Memo Code </center>
   <center> S-052: Intermediate and Advanced Statistical Methods </center>
-author: "Sara Ji and Bailey Buchanan"
+author: "Juhong Eom and Luciana D. Macedo"
 date: "Last Modified: Feb 2026"
 output: pdf_document
 editor_options: 
@@ -31,7 +30,6 @@ library(dplyr)
 library(ggplot2) 
 library(e1071)
 ```
-
 
 ##Data: Thanks to Prof. Alejandro Ganimian and coauthors Karthik
 Muralidharan and Abhijeet Singh for this data
@@ -116,11 +114,6 @@ f_all <- dat %>%
 grid.arrange(grobs = list(f_all, m_all))
 ```
 
-
-
-
-
-
 ## Q2: Separate and joint estimation of causal effects
 
 ```{r causal}
@@ -156,8 +149,7 @@ stargazer(mod1, mod2, mod3,
 
 ```
 
-
-## Additional Notes for Students:
+## Coding Pathway:
 
 ```{r coding_pathway}
 
