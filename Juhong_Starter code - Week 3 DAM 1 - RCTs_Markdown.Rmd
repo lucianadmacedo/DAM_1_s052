@@ -206,63 +206,50 @@ stargazer(mod1, mod2, mod3,
 ```
 
 ## Coding Pathway
+
 library(dplyr)
 
-########
+######## 
+
 # Extract coefficients from Model 3
-coef_summary <- summary(mod3)$coefficients
-intercept <- coef_summary["(Intercept)", "Estimate"]
-treat_effect <- coef_summary["treat1", "Estimate"]
-female_effect <- coef_summary["female1", "Estimate"]
-interaction <- coef_summary["treat1:female1", "Estimate"]
+
+coef_summary \<- summary(mod3)\$coefficients intercept \<-
+coef_summary["(Intercept)", "Estimate"] treat_effect \<-
+coef_summary["treat1", "Estimate"] female_effect \<-
+coef_summary["female1", "Estimate"] interaction \<-
+coef_summary["treat1:female1", "Estimate"]
 
 # Create data frame with all 4 estimated values
-plot_data <- data.frame(
-  group = c("Male Control", "Male Treatment", "Female Control", "Female Treatment"),
-  gender = c("Male", "Male", "Female", "Female"),
-  treatment = c("Control", "Treatment", "Control", "Treatment"),
-  estimate = c(
-    intercept,                                    # Male Control
-    intercept + treat_effect,                     # Male Treatment
-    intercept + female_effect,                    # Female Control
-    intercept + treat_effect + female_effect + interaction  # Female Treatment
-  ),
-  se = c(
-    coef_summary["(Intercept)", "Std. Error"],
-    sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + 
-         vcov(mod3)["treat1", "treat1"] + 
-         2 * vcov(mod3)["(Intercept)", "treat1"]),
-    sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + 
-         vcov(mod3)["female1", "female1"] + 
-         2 * vcov(mod3)["(Intercept)", "female1"]),
-    sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + 
-         vcov(mod3)["treat1", "treat1"] + 
-         vcov(mod3)["female1", "female1"] + 
-         vcov(mod3)["treat1:female1", "treat1:female1"] +
-         2 * vcov(mod3)["(Intercept)", "treat1"] +
-         2 * vcov(mod3)["(Intercept)", "female1"] +
-         2 * vcov(mod3)["(Intercept)", "treat1:female1"] +
-         2 * vcov(mod3)["treat1", "female1"] +
-         2 * vcov(mod3)["treat1", "treat1:female1"] +
-         2 * vcov(mod3)["female1", "treat1:female1"])
-  )
-)
+
+plot_data \<- data.frame( group = c("Male Control", "Male Treatment",
+"Female Control", "Female Treatment"), gender = c("Male", "Male",
+"Female", "Female"), treatment = c("Control", "Treatment", "Control",
+"Treatment"), estimate = c( intercept, \# Male Control intercept +
+treat_effect, \# Male Treatment intercept + female_effect, \# Female
+Control intercept + treat_effect + female_effect + interaction \# Female
+Treatment ), se = c( coef_summary["(Intercept)", "Std. Error"],
+sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + vcov(mod3)["treat1",
+"treat1"] + 2 \* vcov(mod3)["(Intercept)", "treat1"]),
+sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + vcov(mod3)["female1",
+"female1"] + 2 \* vcov(mod3)["(Intercept)", "female1"]),
+sqrt(vcov(mod3)["(Intercept)", "(Intercept)"] + vcov(mod3)["treat1",
+"treat1"] + vcov(mod3)["female1", "female1"] +
+vcov(mod3)["treat1:female1", "treat1:female1"] + 2 \*
+vcov(mod3)["(Intercept)", "treat1"] + 2 \* vcov(mod3)["(Intercept)",
+"female1"] + 2 \* vcov(mod3)["(Intercept)", "treat1:female1"] + 2 \*
+vcov(mod3)["treat1", "female1"] + 2 \* vcov(mod3)["treat1",
+"treat1:female1"] + 2 \* vcov(mod3)["female1", "treat1:female1"]) ) )
 
 # BAR GRAPH showing all 4 values
+
 ggplot(plot_data, aes(x = gender, y = estimate, fill = treatment)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8), alpha = 1) +
-  geom_errorbar(aes(ymin = estimate - se, ymax = estimate + se), 
-                width = 0.2, 
-                position = position_dodge(width = 0.8),
-                linewidth = 0.8) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_minimal() +
-  labs(
-    x = "Gender",
-    y = "Standardized Math Score",
-    fill = "Treatment"
-  ) +
-  scale_fill_manual(values = c("Control" = "lightblue", "Treatment" = "pink"))
+geom_bar(stat = "identity", position = position_dodge(width = 0.8),
+alpha = 1) + geom_errorbar(aes(ymin = estimate - se, ymax = estimate +
+se), width = 0.2, position = position_dodge(width = 0.8), linewidth =
+0.8) + geom_hline(yintercept = 0, linetype = "dashed", color =
+"gray50") + theme_minimal() + labs( x = "Gender", y = "Standardized Math
+Score", fill = "Treatment" ) + scale_fill_manual(values = c("Control" =
+"lightblue", "Treatment" = "pink"))
 
 ## Additional Notes for Students:
 
