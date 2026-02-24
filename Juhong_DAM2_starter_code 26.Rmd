@@ -1,0 +1,87 @@
+---
+title: |
+  <center> S-052: Intermediate and Advanced Statistical Methods </center>
+  <center> for Applied Educational Research </center>
+  <center> Spring 2026 </center>
+author: "Bailey Buchanan, Eddie Kim, Jackie Ramos Draper"
+date: "Last Modified: 2/20/26"
+output: pdf_document
+---
+
+###RQ: How did DACA affect non-citizen immigrants' educational attainment?
+
+
+##Load in packages
+```{r packages, warning = FALSE, message = FALSE}
+library(tidyverse) #to use many useful functions
+library(haven) #to read in a .dta file
+library(stargazer) #to make regression tables
+#install.packages("knitr")
+library(knitr) #nice tables
+```
+
+
+##Define the local directory and Load in data: Data from Kuka, Shenhav, & Shih (2020) Do Human Capital Decisions Respond to the Returns to Education? Evidence from DACA
+
+```{r setwd and load data}
+##Load in data
+dat = read_dta('/Users/juhong/Desktop/S052/Data/kuka_shenhav_shih.dta')
+```
+
+
+##Transform data: 
+```{r tranform data}
+#First, transform noncit into a factor variable and create a factor variable of the "year". You do not need to edit anything in this section, except the name of the data frame if it is not "dat". 
+
+dat <- dat %>% 
+  mutate(years_cat = as.factor(dat$year),
+         noncit = as.factor(dat$noncit))
+
+# A "factor" variable type forces R to think of the values as non-numeric and categorical. Unlike strings (characters), factors have predefined levels, making them useful for categorical data analysis.
+```
+
+
+##Review Variables
+```{r summaries}
+#Optional: use this code chunk to get to know your data, perhaps by creating tables that show you the number of non-citizen/citizen immigrants in your sample and the mean high school graduation rates by documentation status. The group_by() and summarize() commands will be useful.
+
+```
+
+
+
+#Question 1: Interpreting raw means
+```{r q1}
+#For this DAM, we use the person weights without clustering to simplify the code and focus on interpreting the DiD results. In reality, we would instead use the full survey design -- e.g., svydesign() -- with clustering of standard errors at the household level.
+
+#Fit a weighted regression model to obtain means in each cell.
+mod1 <- #weighted regression here
+dat$mod1_preds <- predict(mod1) #store mod1 predictions as variable in dat
+
+#Hints: The group_by() and summarize() commands will be useful as you create your graph. Use "year" instead of "years_cat" to make your x axis, and geom_vline(xintercept = ) will help you draw a vertical line on your plot.
+
+```
+
+
+##Question 2: Effects by group
+```{r q2}
+##Create a "post" indicator variable where years 2005-2011 are 0 and 2012-2015 are 1.
+
+#Using this variable, we can ask whether the policy affected the focal group and also the reference group. Run two regressions, one for each group, and remember to use weights!
+mod2_yes <- #weighted regression for noncitizen immigrants here
+mod2_no <- #weighted regression for citizen immigrants here
+```
+
+
+##Question 3: Interaction model
+```{r q3}
+#Now, the interaction model for the differences in differences
+mod3 <- #weighted regression with interaction term
+
+#Regression Table
+stargazer(mod2_yes, mod2_no, mod3, 
+          type = "text", 
+          column.labels = c("Focal", "Reference", "Contrast"), 
+          title = "The effect of DACA on high school completion")
+
+```
+
