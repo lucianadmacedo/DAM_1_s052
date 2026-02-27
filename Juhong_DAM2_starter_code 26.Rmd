@@ -18,6 +18,7 @@ library(haven) #to read in a .dta file
 library(stargazer) #to make regression tables
 #install.packages("knitr")
 library(knitr) #nice tables
+
 library(ggplot2) #graphs
 ```
 
@@ -35,8 +36,8 @@ dat = read_dta('/Users/juhong/Desktop/S052/Data/kuka_shenhav_shih.dta')
 #First, transform noncit into a factor variable and create a factor variable of the "year". You do not need to edit anything in this section, except the name of the data frame if it is not "dat". 
 
 dat <- dat %>% 
-  mutate(years_cat = as.factor(year),
-         noncit = as.factor(noncit))
+  mutate(years_cat = as.factor(dat$year),
+         noncit = as.factor(dat$noncit))
 
 # A "factor" variable type forces R to think of the values as non-numeric and categorical. Unlike strings (characters), factors have predefined levels, making them useful for categorical data analysis.
 ```
@@ -54,6 +55,16 @@ dat <- dat %>%
 ```{r q1}
 #For this DAM, we use the person weights without clustering to simplify the code and focus on interpreting the DiD results. In reality, we would instead use the full survey design -- e.g., svydesign() -- with clustering of standard errors at the household level.
 
+r <- dat%>%group_by(noncit, year)%>%summarize(avr=mean(hs, na.rm=TRUE))
+print(r)
+
+r$noncit <- factor(r$noncit, levels = c(0, 1), labels = c("Citizen",
+"Non citizen"))
+r$year <- as.numeric(r$year)
+
+ggplot(data = r, aes(x=year, y=avr, group=noncit, color=noncit))+geom_line()+geom_point()+scale_x_continuous(breaks = unique(r$year))+labs(color = "Citizenship Status", y="Rate of High School Graduation", x="Year")+ylim(0, 1)+geom_vline(xintercept = 2012, color = "red")
+
+
 #Fit a weighted regression model to obtain means in each cell.
 mod1 <- lm(hs~year*noncit, data=dat, weights=perwt)  #weighted regression here
 dat$mod1_preds <- predict(mod1) #store mod1 predictions as variable in dat
@@ -67,7 +78,10 @@ preds$noncit <- factor(preds$noncit, levels = c(0, 1), labels = c("Citizen",
 preds$year <- as.numeric(preds$year)
 
 ggplot(data = preds, aes(x=year, y=avr, group=noncit, color=noncit))+geom_line()+geom_point()+scale_x_continuous(breaks = unique(preds$year))+labs(color = "Citizenship Status", y="Rate of High School Graduation", x="Year")+ylim(0, 1)+geom_vline(xintercept = 2012, color = "red")
+mod1 <- #weighted regression here
+dat$mod1_preds <- predict(mod1) #store mod1 predictions as variable in dat
 
+#Hints: The group_by() and summarize() commands will be useful as you create your graph. Use "year" instead of "years_cat" to make your x axis, and geom_vline(xintercept = ) will help you draw a vertical line on your plot.
 ```
 
 
@@ -84,7 +98,6 @@ mod2_no <-  lm(hs~post, data = dat_no, weights=perwt) #weighted regression for c
 
 summary(mod2_no)
 summary(mod2_yes)
-
 ```
 
 
@@ -94,6 +107,7 @@ summary(mod2_yes)
 mod3 <- lm(hs~post*noncit, data=dat, weights=perwt) #weighted regression with interaction term
 
 summary(mod3)
+mod3 <- #weighted regression with interaction term
 
 #Regression Table
 stargazer(mod2_yes, mod2_no, mod3, 
@@ -103,10 +117,39 @@ stargazer(mod2_yes, mod2_no, mod3,
 
 ```
 
+<<<<<<< HEAD
 ##Coding Pathway
 ```{r}
 #	Plot the coefficient estimates and their associated confidence intervals for the years 2005-2015.
 
+dat$year_factor <- factor(dat$year)
+dat$year_factor <- relevel(dat$year_factor, ref = "2011")
+
+mod_coef <- lm(hs ~ year_factor * noncit, data = dat, weights = perwt)
+
+library(broom)
+
+coef_df <- tidy(mod_coef, conf.int = TRUE)
+
+# interaction term만 추출 (year_factor*noncit)
+coef_df <- coef_df %>%
+  filter(grepl("year_factor.*noncit", term)) %>%
+  mutate(year = as.numeric(gsub("year_factor(\\d+):noncit1", "\\1", term)))
+
+# 2011 (reference year) 추가 - coefficient는 0
+ref_row <- data.frame(year = 2011, estimate = 0, conf.low = 0, conf.high = 0)
+coef_df <- bind_rows(coef_df, ref_row)
+
+ggplot(coef_df, aes(x = year, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 2011.5, color = "red") +
+  scale_x_continuous(breaks = 2005:2015) +
+  labs(x = "Year", 
+       y = "Difference-in-Differences Estimate",
+       title = "Effect of DACA on High School Graduation") +
+  theme_minimal()
 
 #	Your reference year should be 2011 (the year before the policy was implemented).
 #	You should include a vertical line halfway between 2011 and 2012 (indicating that 2011 is pre-treatment, and 2012 is post-treatment).
