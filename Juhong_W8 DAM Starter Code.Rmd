@@ -1,0 +1,288 @@
+---
+title: "Week 8 DAM Starter Code"
+author: "Maddie Kingan"
+date: "2025-10-15"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Set working directory 
+```{r setwd}
+#Set working directory. Uncomment the next line of code and run it. 
+#setwd("[YOUR FILE PATH HERE]")
+
+#example: setwd("~/S52 2025/Misc")
+```
+
+## Load Packages 
+```{r packages}
+library(haven)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(stargazer)
+library(lme4)
+library(psych)
+```
+
+## Load Data 
+```{r data}
+medicaldf <- read_dta('/Users/juhong/Desktop/S052/Data/KoreanMedicalPortfolios.dta')
+sedadf <- read_dta('/Users/juhong/Desktop/S052/Data/SEDA19.dta')
+```
+
+##Step 1: Exploratory Data Analysis of SEDA SES relationships
+```{r explore}
+#Drop DC and HI which each have only have 1 school district.
+sedadf <- sedadf %>%
+  filter(stateabb != "DC", stateabb != "HI")
+
+#Set plot range data
+sedadf$plotrange <- (sedadf$sesavgall < 3)  & (sedadf$sesavgall > -4) & (sedadf$meanavg > 1) & (sedadf$meanavg < 10)
+
+#Trellis plot illustrating separate regression lines by state
+sedadf %>%
+  filter(plotrange == TRUE) %>% #plot only data that is in the range set above
+  ggplot(aes(x = sesavgall, y = meanavg)) + 
+  geom_point(size = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) + #plot an lm line 
+  facet_wrap(~stateabb) + #plot each state separately
+  xlab("District Socioeconomic Status") +
+  ylab("District Average Test Score, 2009-2016") +
+  ggtitle("trellis")
+
+#Calculating intercepts and slopes for each state
+sedadf <- sedadf %>%
+  group_by(stateabb) %>%
+  mutate(intercept = coef(lm(meanavg ~ sesavgall))[1],
+         slope = coef(lm(meanavg ~ sesavgall))[2])
+
+#Optional example to open "object" > coefficients > see the 1st and 2nd element (to see where the above estimates are stored)
+#object <- lm(meanavg ~ sesavgall, data = dat)
+  
+
+#Predicted average test scores for each district given SES
+sedadf$predicted <- sedadf$intercept + sedadf$slope*sedadf$sesavgall
+
+#Overlaid linear fit of regression lines for all 49 states
+ggplot(sedadf, aes(x = sesavgall, y = predicted, group = stateabb)) + 
+  geom_smooth() + 
+  scale_y_continuous(breaks = 1:9) +
+  xlab("District Socioeconomic Status") +
+  ylab("District Average Test Score, 2009-2016") +
+  ggtitle("overlaid")
+```
+
+##Step 2: Building multilevel regression models
+```{r mlm}
+#Establish a binary variable for states that had growing public school enrollments from 2009 to 2016.
+#Data from https://nces.ed.gov/programs/digest/d19/tables/dt19_203.20.asp
+
+
+sedadf$growing <- 0
+
+#Step 2A: Generate an indicator variable here that equals 1 for the following states:
+		#AL, CT, IL, ME, MI, MS, MO, NH, NY, OH, PA, RI, VT, WV, WI
+
+growing <- c("AL","CT","IL","ME","MI","MS","MO","NH","NY","OH","PA","RI","VT","WV","WI")
+
+
+sedadf$growing <- as.integer(sedadf$stateabb %in% growing)
+
+
+#Model 0: Random Intercepts baseline model to establish a baseline log-likelihood
+
+#Run your intercept-only model, using the lmer command (make sure REML = FALSE to use maximum likelihood modeling)
+#Important: Restrict your regression to districts with non-missing SES so that the sample is the same between this regression and the following regressions.
+
+mod0 <- lmer(meanavg ~ 1 + (1|stateabb), data = sedadf, subset = !is.na(sesavgall), REML=FALSE)
+             
+summary(mod0)
+
+#Model 1: Fixed intercepts model to fit within-state slopes
+#This code runs a fixed effects model. We provide it since it is not a focus of this assignment.
+
+mod1 <- lm(meanavg ~ sesavgall + stateabb, data = sedadf)
+summary(mod1)
+
+#Model 2: Random intercepts model with SES (level-1 predictor)
+#Here, run a random intercepts regression of test scores on SES, again using lmer and REML=FALSE 
+
+mod2 <- lmer(meanavg~sesavgall + (1|stateabb), data = sedadf, subset = !is.na(sesavgall), REML = FALSE)
+
+#Model 3: Random intercepts model with level-2 predictor
+#Now add the level-2 predictor "growing" to your regression.
+
+mod3 <- lmer(meanavg~sesavgall + growing + (1|stateabb), data = sedadf, subset = !is.na(sesavgall), REML = FALSE)
+
+
+#note neg2ll (deviance) doesn't come out of mod1, so we have to craft the input a bit
+neg2ll <- round(as.numeric(unlist(lapply(list(mod0, mod2, mod3), FUN = function(x) getME(x, "devcomp")$cmp['dev']))), 2)
+neg2ll <- c("", neg2ll)
+neg2ll <- neg2ll[c(2, 1, 3, 4)]
+
+
+#same with sigma2_u (between group variance) and sigma2_e (within group variance)
+temp <- do.call(rbind, lapply(list(mod0, mod2, mod3), FUN = function(x) data.frame(VarCorr(x))))
+  #store between group variance 
+sigma2_u <- round(temp$vcov[c(1, 3, 5)], 3)
+sigma2_u <- c("", sigma2_u)
+sigma2_u <- sigma2_u[c(2, 1, 3, 4)]
+  #store within group variance 
+sigma2_e <- round(temp$vcov[c(2, 4, 6)], 3)
+sigma2_e <- c("", sigma2_e)
+sigma2_e <- sigma2_e[c(2, 1, 3, 4)]
+
+#Generate model building tables
+stargazer(mod0, mod1, mod2, mod3, 
+          type = "text",
+          column.labels = paste("Model", 0:3),
+          model.numbers = FALSE,
+          keep = c("sesavgall", "growing", "Constant"), #specify the variables to include in the table and avoid printing all Mod1 fixed effects
+          keep.stat = c("n"), #keep n (number of observations)
+          add.lines = list(c("neg2ll", neg2ll),
+                           c("sigma2u", sigma2_u),
+                           c("sigma2e", sigma2_e)))
+
+
+#Model 4: Fixed effects model with level 2 predictor. Why does this fail?	
+mod4 <- lm(meanavg ~ stateabb + sesavgall + growing, data = sedadf)
+summary(mod4)
+
+mod5 <- lm(meanavg ~ leanm + sesavgall + growing, data = sedadf)
+summary(mod5)
+```
+
+## Step 3: Supplementary visualization: A caterpillar plot to visualize random intercepts
+```{r supp}
+#Fit a mixed model equivalent to Model 3 and save random intercepts
+summary(mod2)
+temp <- ranef(mod2, condVar = TRUE)
+randeffs <- data.frame(state = row.names(temp$stateabb),
+                       int = as.numeric(unlist(temp$stateabb)),
+                       stderr = as.numeric(sqrt(data.frame(attr(temp$stateabb, "postVar")))))
+randeffs$rank <- rank(randeffs$int)
+
+ggplot(randeffs, aes(x = rank, y = int)) +
+  geom_text(aes(label = state, y = int + 2*stderr), nudge_y = 0.07, angle = 90) +
+  geom_errorbar(aes(ymax = int + 2*stderr, ymin = int - 2*stderr)) +
+  geom_point(size = 2) +
+  geom_hline(aes(yintercept = 0), col = "red") +
+  xlab("Rank") +
+  ylab("Random state intercept with 95% CI, in grade levels") +
+  ggtitle("caterpillar")
+```
+
+# Part 2: Interrater and interitem reliability
+
+##RQ1 Data: Intraclass Correlations for Interrater Reliability (Raters Nested)
+```{r rq1}
+#histogram of all scores
+ggplot(medicaldf, aes(x = score)) + 
+  geom_histogram(binwidth = 1, color = "lightblue") + 
+  ggtitle("allscores")
+
+#boxplot of rater scores
+ggplot(medicaldf, aes(group = rater, x = rater, y = score)) + 
+  geom_boxplot() + ggtitle("raterscores")
+
+#tibble of rater scores (mean, standard deviation, frequency)
+medicaldf %>%
+  group_by(rater) %>%
+  summarize(scoremean = mean(score),
+            scoresd = sd(score),
+            freq = n())
+
+#boxplot of item scores
+ggplot(medicaldf, aes(group = item, x = rater, y = score)) + 
+  geom_boxplot() + 
+  ggtitle("itemscores")
+
+#tibble of item scores (mean, standard deviation, frequency)
+medicaldf %>%
+  group_by(item) %>%
+  summarize(scoremean = mean(score),
+            scoresd = sd(score),
+            freq = n())
+
+#Begin with the overall score:
+
+#Estimate intraclass correlations for each item (create a loop)
+for(i in 1:5){ #the loop iterates from 1 to 5 
+  assign(paste0("moditem", i), #create an object for each
+         lmer(score ~ (1|student), data = filter(medicaldf, item == i))) #run a random intercept model for each unique student, the data used for each model will be a subset where the item is the current value/iteration of "i" (1-5)
+}
+#^result is 5 models stored in environment
+
+
+temp <- do.call(rbind, lapply(list(moditem1, moditem2, moditem3, moditem4, moditem5), FUN = function(x) data.frame(VarCorr(x))))
+sigma2_u <- round(temp$vcov[c(1, 3, 5, 7, 9)], 3)
+sigma2_e <- round(temp$vcov[c(2, 4, 6, 8, 10)], 3)
+rho <- round(sigma2_u / (sigma2_u + sigma2_e), 3) #ICC (inter-rater reliability)
+
+stargazer(moditem1, moditem2, moditem3, moditem4, moditem5, type = "text",
+          title = "Interrater reliability coefficients for item scores",
+          column.labels = c("Goals", "Processes", "Reflect", "Plans", "Clarity"),
+          model.numbers = FALSE,
+          keep.stat = c("n"),
+          add.lines = list(c("sigma2u", sigma2_u),
+                           c("sigma2e", sigma2_e),
+                           c("rho", rho)))
+
+#OPTIONAL:
+  #Estimate the intraclass correlation for the average of the 5 item scores
+  medicaldf <- medicaldf %>%
+    group_by(student, rater) %>%
+    mutate(avgscore = mean(score))
+
+  #Estimate intraclass correlation for each rater's average score
+  lmer(avgscore ~ (1|student), data = filter(medicaldf, item == 1))
+```
+
+## RQ2 Analysis: Intraclass Correlations for Interitem Reliability (Items Crossed)
+```{r rq2}
+#Estimate intraclass correlations for each rater
+for(i in 1:5){
+  assign(paste0("modrater", i),
+         lmer(score ~ (1|student) + (1|item), data = filter(medicaldf, rater == i)))
+}
+
+
+temp <- do.call(rbind, lapply(list(modrater1, modrater2, modrater3, modrater4, modrater5), FUN = function(x) data.frame(VarCorr(x))))
+sig2pers <- round(temp$vcov[c(1, 4, 7, 10, 13)], 4) #person var (good)
+sig2item <- round(temp$vcov[c(2, 5, 8, 11, 14)], 4) #item var (neutral)
+sig2e <- round(temp$vcov[c(3, 6, 9, 12, 15)], 4) #error var (bad)
+
+stargazer(modrater1, modrater2, modrater3, modrater4, modrater5, type = "text",
+          title = "Interitem reliability coefficients by rater",
+          column.labels = paste("Rater", 1:5, sep = " "),
+          model.numbers = FALSE,
+          keep.stat = c("n"),
+          add.lines = list(c("sig2pers", sig2pers),
+                           c("sig2item", sig2item),
+                           c("sig2e", sig2e)))
+```
+
+###Cronbach's alpha for item scores for Rater 1
+```{r rq3}
+#Focus only on the first rater for alpha (transform data from long to wide to prep for alpha command)
+dat_r1 <- medicaldf %>%
+  filter(rater == 1) %>%
+  ungroup() %>%
+  dplyr::select(student,item,score) %>%
+  pivot_wider(names_from = item, values_from = score, names_prefix = "item")
+
+
+
+#Cronbach's alpha
+statobj <- alpha(dplyr::select(dat_r1, -student))
+statobj$total$raw_alpha #unstandardized cronbach's alpha
+
+statobj$item.stats %>% dplyr::select(raw.r) #item-test correlations
+```
+
