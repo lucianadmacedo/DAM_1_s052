@@ -1,0 +1,122 @@
+---
+title: "Week 10 DAM Starter Code"
+author: "Juhong"
+date: "2025-10-15"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Set working directory 
+```{r setwd}
+#Set working directory. Uncomment the next line of code and run it. 
+#setwd("[YOUR FILE PATH HERE]")
+
+#example: setwd("~/S52 2025/Misc")
+```
+
+## Load Packages 
+```{r packages}
+library(haven)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(stargazer)
+library(lme4)
+library(psych)
+```
+
+## Load Data 
+```{r data}
+spdf <- read_dta('/Users/juhong/Desktop/S052/Data/seda_with_spending_2019.dta')
+sedadf <- read_dta('/Users/juhong/Desktop/S052/Data/SEDA19.dta')
+```
+
+##Step 1: Exploratory Data Analysis of SEDA SES relationships
+```{r explore}
+#Drop DC and HI which each have only have 1 school district.
+sedadf <- sedadf %>%
+  filter(stateabb != "DC", stateabb != "HI")
+
+#Set plot range data
+sedadf$plotrange <- (sedadf$sesavgall < 3)  & (sedadf$sesavgall > -4) & (sedadf$meanavg > 1) & (sedadf$meanavg < 10)
+
+mod0 <- lm(meanavg ~ sesavgall, data = sedadf)
+mod1 <- lm(meanavg ~ sesavgall+I(sesavgall^2), data = sedadf)
+mod2 <- lm(meanavg ~ sesavgall+I(sesavgall^2)+I(sesavgall^3), data = sedadf)
+
+stargazer(mod0, mod1, mod2, type = "text")
+
+summary(mod2)
+
+```
+
+
+##Step 2: Building multilevel regression models
+```{r mlm}
+# For regressions, make a spending variable in $1,000s
+spdf <- spdf %>%
+  mutate(perpupil000 = perpupilexp / 1000)
+
+spdf$logperpupil <- log(spdf$perpupilexp)
+spdf$logperpupil <- ifelse(spdf$perpupilexp > 0, log(spdf$perpupilexp), NA)
+
+head(spdf)
+
+```
+
+ggplot(spdf, aes(x = perpupilexp)) +
+  geom_histogram() +
+  labs(
+    x = "Per Pupil Expenditure",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+
+ggplot(spdf, aes(x = logperpupil)) +
+  geom_histogram() +
+  labs(
+    x = "Per Pupil Expenditure",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+  
+```{r mlm}
+# For regressions, make a spending variable in $1,000s
+mod20 <- lm(meanavg ~ perpupil000 + stateabb, data = spdf)
+mod21 <- lm(meanavg ~ logperpupil + stateabb, data = spdf)
+mod22 <- lmer(meanavg ~ 1 + (1|stateabb), data = spdf, subset = !is.na(stateabb), REML = FALSE)
+mod23 <- lmer(meanavg ~ logperpupil + (1|stateabb), data = spdf, subset = !is.na(stateabb), REML = FALSE)
+
+# neg2ll (deviance)
+neg2ll <- round(as.numeric(unlist(lapply(list(mod22, mod23), FUN = function(x) getME(x, "devcomp")$cmp['dev']))), 2)
+neg2ll <- c("", "", neg2ll)  # lm 모델 2개라 "" 2개
+
+# sigma2_u (between group variance)
+temp <- do.call(rbind, lapply(list(mod22, mod23), FUN = function(x) data.frame(VarCorr(x))))
+print(temp)  # 확인용, 나중에 지워도 됨
+
+sigma2_u <- round(temp$vcov[c(1, 3)], 3)  # mod22 between, mod23 between
+sigma2_u <- c("", "", sigma2_u)  # lm 모델 2개라 "" 2개
+
+# sigma2_e (within group variance)
+sigma2_e <- round(temp$vcov[c(2, 4)], 3)  # mod22 within, mod23 within
+sigma2_e <- c("", "", sigma2_e)  # lm 모델 2개라 "" 2개
+
+# Generate model building tables
+stargazer(mod20, mod21, mod22, mod23,
+          type = "text",
+          column.labels = paste("Model", 0:3),
+          model.numbers = FALSE,
+          keep = c("logperpupil", "perpupil000", "Constant"),
+          keep.stat = c("n"),
+          add.lines = list(c("neg2ll", neg2ll),
+                           c("sigma2u", sigma2_u),
+                           c("sigma2e", sigma2_e)))
+
+```

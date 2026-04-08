@@ -133,12 +133,14 @@ mod_coef <- lm(hs ~ year_factor * noncit, data = dat, weights = perwt)
 
 library(broom)
 
-coef_df <- tidy(mod_coef, conf.int = TRUE)
+coef_df <- tidy(mod_coef, conf.int = TRUE, conf.level = 0.95)
 
-# interaction term만 추출 (year_factor*noncit)
+# Extract coefficients of the interaction term (year_factor*noncit)
 coef_df <- coef_df %>%
   filter(grepl("year_factor.*noncit", term)) %>%
   mutate(year = as.numeric(gsub("year_factor(\\d+):noncit1", "\\1", term)))
+
+coef_df
 
 # 2011 (reference year) 추가 - coefficient는 0
 ref_row <- data.frame(year = 2011, estimate = 0, conf.low = 0, conf.high = 0)
@@ -151,9 +153,8 @@ ggplot(coef_df, aes(x = year, y = estimate)) +
   geom_vline(xintercept = 2011.5, color = "red") +
   scale_x_continuous(breaks = 2005:2015) +
   labs(x = "Year", 
-       y = "Difference-in-Differences Estimate",
-       title = "Effect of DACA on High School Graduation") +
-  theme_minimal()+ylim(-0.1, 0.1)
+       y = "Difference-in-Differences Estimate") +
+  theme_minimal()+ylim(-0.13, 0.13)
 
 #	Your reference year should be 2011 (the year before the policy was implemented).
 #	You should include a vertical line halfway between 2011 and 2012 (indicating that 2011 is pre-treatment, and 2012 is post-treatment).

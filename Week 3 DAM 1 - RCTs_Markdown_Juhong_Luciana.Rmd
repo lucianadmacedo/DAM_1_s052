@@ -36,8 +36,8 @@ Muralidharan and Abhijeet Singh for this data
 
 ```{r importdata2}
 # Load the data
-dat <- read_dta("mindspark_data.dta")
-origin <- read_dta("mindspark_data.dta")
+dat <- read_dta("/Users/juhong/Desktop/S052/Data/mindspark_data.dta")
+origin <- read_dta("/Users/juhong/Desktop/S052/Data/mindspark_data.dta")
 ```
 
 ## Q1: Exploratory Data Analysis
