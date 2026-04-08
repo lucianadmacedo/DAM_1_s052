@@ -19,6 +19,10 @@ sedadf <- read_dta('SEDA19.dta')
 ### Coding pathway ###
 # code adapted from LS week 2
 
+sedadf %>%
+  summarize(mean_all = mean(meanavg, na.rm = TRUE))
+
+
 dat <- sedadf %>%
   filter(stateabb == "MA" | stateabb == "TX") 
 
@@ -31,38 +35,33 @@ dat$SES <- dat$sesavgall
 
 
 reg1 <- lm(meanavg ~ SES, data = dat)  
-summary(reg1) # this is in line with the reference table
+summary(reg1) 
 
 reg2 <- lm(meanavg ~ SES + MA, data = dat)
-summary(reg2) # this is in line with the reference table
+summary(reg2) 
 
 reg3 <- lm(meanavg ~ MA*SES, data = dat)
-summary(reg3) # this is in line with the reference table
+summary(reg3) 
 
-stargazer(
+
+invisible(stargazer(
   reg1, reg2, reg3,
-  type  = "text",
+  type = "text",
+  se = list(se1, se2, se3),
   title = "Achievement vs. SES in MA and TX",
-  
+  dep.var.labels.include = FALSE,
   dep.var.caption = "",
-  covariate.labels = c("SES", "MA", "MA x SES", "Constant"),
-  
-  star.cutoffs = c(0.05, 0.01, 0.001),
-  star.char    = c("*", "**", "***"),
-  
-  omit.stat=c("f", "ser", "rsq","adj.rsq","n"),
+  intercept.bottom = TRUE,
+  covariate.labels = c("SES", "MA × SES", "MA", "Constant"),
+  omit.stat = c("f", "ser", "rsq","adj.rsq","n"),
   digits = 3,
-  
-  add.lines=list(c("\\textit{N}", nobs(reg1), nobs(reg2), nobs(reg3))),
-  
-  notes = c("The outcome in all columns is average achievement in grade levels.",
-  "The overall average grade level is 5.6. SES is standardized and centered, so", 
-  "the average SES is 0. All regressions are restricted to districts in MA and",
-  "TX only. Robust standard errors in parentheses. * p<0.05; ** p<0.01; *** p<0.001"
+  add.lines = list(c("N", nobs(reg1), nobs(reg2), nobs(reg3))),
+  notes = c(
+    "The outcome in all columns is average achievement in grade levels.",
+    "The overall average grade level is 5.6. SES is standardized and centered, so",
+    "the average SES is 0. All regressions are restricted to districts in MA and",
+    "TX only. Robust standard errors in parentheses. * p<0.05; ** p<0.01; *** p<0.001"
   ),
-  notes.label = " ", #from chatgpt
-  notes.align = "l", #from chatgpt
+  notes.label = "",
   notes.append = FALSE
-)
-
-
+))
