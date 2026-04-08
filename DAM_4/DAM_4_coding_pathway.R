@@ -43,6 +43,11 @@ summary(reg2)
 reg3 <- lm(meanavg ~ MA*SES, data = dat)
 summary(reg3) 
 
+library(sandwich)
+library(lmtest)
+se1 <- sqrt(diag(vcovHC(reg1, type = "HC1")))
+se2 <- sqrt(diag(vcovHC(reg2, type = "HC1")))
+se3 <- sqrt(diag(vcovHC(reg3, type = "HC1")))
 
 invisible(stargazer(
   reg1, reg2, reg3,
